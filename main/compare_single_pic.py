@@ -1,6 +1,6 @@
 from src.hash_tools import *
-from PIL import Image
 from src import config
+from PIL import Image
 
 
 img1 = Image.open(config.images_dir + 'derevo1.jpg')
@@ -11,4 +11,4 @@ hash2 = build_dhash(img2)
 
 dist = hamming_distance(hash1, hash2)
 
-print hash1 + ", " + hash2 + " The same?: " + str(similarity(dist)) + ". Distance is: " + str(dist)
+print hash1 + ", " + hash2 + " The same?: " + str(similarity(dist)) + ". Difference: " + str(dist)
