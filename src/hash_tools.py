@@ -85,7 +85,7 @@ def scan_for_similarity(img):
         reader = csv.reader(db, delimiter="\n")
         rownum = 0
         for row in reader:
-            # Exclude header row and the image itself.
+            # Exclude header row
             if rownum > 0:
                 fandh = row[0].split(',')
                 h2 = fandh[1]
