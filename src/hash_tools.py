@@ -3,23 +3,36 @@ import csv, os
 import config
 
 
-def build_dhash(image, hash_size=config.hash_size):
-    # Resize image
-    # Convert it to grayscale
-    image = image.convert('L').resize(
-        (hash_size + 1, hash_size),
-        Image.BILINEAR,
+def build_dhash(image):
+    # Resize image and convert it to greyscale ("L")
+    image = resize_and_convert_colors(image)
+    # Comparing pixel by pixel (with neighbor pixel)
+    difference = collect_pixel_diff(image)
+    # Convert to hexadecimal array
+    hex_string = convert_to_hex(difference)
+    # Return the hash string
+    return ''.join(hex_string)
+
+
+def resize_and_convert_colors(image):
+    return image.convert('L').resize(
+        (config.hash_size + 1, config.hash_size), # (width, height)
+        Image.BILINEAR, # linear interpolation
     )
 
-    # Comparing pixel by pixel (with neighbor pixel)
+
+def collect_pixel_diff(image):
+    # difference is a binary matrix
     difference = []
-    for row in xrange(hash_size):
-        for col in xrange(hash_size):
+    for row in xrange(config.hash_size):
+        for col in xrange(config.hash_size):
             pixel_left = image.getpixel((col, row))
             pixel_right = image.getpixel((col + 1, row))
             difference.append(pixel_left > pixel_right)
+    return difference
 
-    # Convert to hexadecimal array
+
+def convert_to_hex(difference):
     decimal_value = 0
     hex_string = []
     for index, value in enumerate(difference):
@@ -28,9 +41,7 @@ def build_dhash(image, hash_size=config.hash_size):
         if (index % 8) == 7:
             hex_string.append(hex(decimal_value)[2:].rjust(2, '0'))
             decimal_value = 0
-
-    # Return the hash string
-    return ''.join(hex_string)
+    return hex_string
 
 
 def hamming_distance(hash1, hash2):
