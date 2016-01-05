@@ -1,11 +1,11 @@
 from PIL import Image
 import csv, os, time
 import config
-import numpy as np
 
 
 class Hashing:
     current_duration = ""
+    images_count = 0
 
     def build_dhash(self, image):
         # 1. Convert image to grayscale
@@ -84,7 +84,7 @@ class Hashing:
 
         print "Completed! Database is initiated."
 
-    def scan_for_similarity(self, img):
+    def find_in_database(self, img):
         # Scan through Database to find similar pics, than order by dirrerence
         h = self.build_dhash(img)
         diffs = {}
@@ -98,6 +98,23 @@ class Hashing:
                     h2 = f_and_h[1]
                     diffs[f_and_h[0]] = self.hamming_distance(h, h2)
                 rownum += 1
+            self.images_count = rownum - 1
+
+        # Print results by the similarity value
+        diffs = sorted([(value, key) for (key, value) in diffs.items()])
+        for val in diffs:
+            print self.similarity(val[0]) + ": " + val[1]
+
+    def find_in_directory(self, img, directory=config.images_dir):
+        # Scan through directory to find similar pics, than order by dirrerence
+        h = self.build_dhash(img)
+        diffs = {}
+        files = os.listdir(directory)
+        self.images_count = len(files)
+
+        for f in files:
+            h2 = self.build_dhash(Image.open(directory + f))
+            diffs[f] = self.hamming_distance(h, h2)
 
         # Print results by the similarity value
         diffs = sorted([(value, key) for (key, value) in diffs.items()])
