@@ -1,6 +1,7 @@
 from PIL import Image
 import csv, os
 import config
+import numpy as np
 
 
 def build_dhash(image):
@@ -23,6 +24,7 @@ def convert_and_resize_image(image):
 
 def collect_pixel_diff(image):
     # difference is a binary matrix
+    # quadratic
     difference = []
     for row in xrange(config.hash_size):
         for col in xrange(config.hash_size):
@@ -33,6 +35,7 @@ def collect_pixel_diff(image):
 
 
 def convert_to_hex(difference):
+    # linear
     decimal_value = 0
     hex_string = []
     # Run through binary matrix and convert each value to hex value
@@ -64,7 +67,7 @@ def similarity(distance):
 
 
 def calculate_hash_strings_in_dir(directory):
-    # Get the dict of hash strings
+    # Get the dict of hash strings: linear
     # Get the file names
     files = os.listdir(directory)
     # Write headers
@@ -104,3 +107,24 @@ def scan_for_similarity(img):
         print similarity(val[0]) + ": " + val[1]
 
 
+# unused
+def weighted_average(pixel):
+    return 0.299*pixel[0] + 0.587*pixel[1] + 0.114*pixel[2]
+
+
+def convert_to_grayscale(image):
+    if image.mode == 'RGB':
+        # Getting image as a pixels array
+        pixels = np.asarray(image)
+        # Convert each pixel via formula Y' =  0.299 R' + 0.587 G' + 0.114 B'
+        gray = np.dot(pixels[...,:3], [0.299, 0.587, 0.144])
+        # Overwrite existing image with new pixels array
+        image = Image.fromarray(np.uint8(gray))
+    return image
+
+
+def resize_image(image):
+    return image.resize(
+        (config.hash_size + 1, config.hash_size), # (width, height)
+        Image.BILINEAR, # linear interpolation
+    )
