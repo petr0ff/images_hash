@@ -1,4 +1,4 @@
-from src.hash_tools import Hashing
+from src.hash_tools import *
 from src import config
 from PIL import Image
 
@@ -9,15 +9,15 @@ def test(run_times=1):
         hashing = Hashing()
 
         img1 = Image.open(config.images_dir + 'derevo1.jpg')
-        img2 = Image.open(config.images_dir + 'derevo8.jpg')
+        img2 = Image.open(config.images_dir + 'derevo2.jpg')
 
         hash1 = hashing.build_dhash(img1)
         hash2 = hashing.build_dhash(img2)
 
-        dist = hashing.hamming_distance(hash1, hash2)
+        dist = hamming_distance(hash1, hash2)
 
         print "Image 1 hash: " + hash1 + "\nImage 2 hash: " + hash2 + "\nThe same?: " + str(
-            hashing.similarity(dist)) + "\nHamming distance is: " + str(
+            similarity(dist)) + "\nHamming distance is: " + str(
             dist) + "\nDuration: " + hashing.current_duration
 
         avg_duration += float(hashing.current_duration)
