@@ -1,5 +1,5 @@
 from PIL import Image
-import csv, os, time
+import csv, os, time, hashlib
 import config
 
 
@@ -69,9 +69,45 @@ class Hashing:
         self.current_duration = "%0.3f" % (finish - start)
         return convert_to_hex(difference)
 
+    def build_mda5_hash(self, path):
+        start = time.time()
+        # Read image as string array
+        image_file = open(path).read()
+        h = hashlib.md5(image_file).hexdigest()
+        finish = time.time()
+        self.current_duration = "%0.3f" % (finish - start)
+        return h
+
+    def compare_pixel_by_pixel(self, img1, img2):
+        start = time.time()
+        w1, h1 = img1.size
+        w2, h2 = img2.size
+        if w1 != w2:
+            print "Different width!"
+            finish = time.time()
+            self.current_duration = "%0.3f" % (finish - start)
+            return False
+        if h1 != h2:
+            print "Different height!"
+            finish = time.time()
+            self.current_duration = "%0.3f" % (finish - start)
+            return False
+        for col1, col2 in zip(xrange(w1), xrange(w2)):
+            for row1, row2 in zip(xrange(h1), xrange(h2)):
+                if img1.getpixel((col1, row1)) != img2.getpixel((col2, row2)):
+                    print "Images are different!"
+                    finish = time.time()
+                    self.current_duration = "%0.3f" % (finish - start)
+                    return False
+        print "Images are the same!"
+        finish = time.time()
+        self.current_duration = "%0.3f" % (finish - start)
+        return True
+
 
 class Database:
     images_count = 0
+    hashing = Hashing()
 
     def calculate_hash_strings_in_dir(self, directory):
         # Get the dict of hash strings: linear
@@ -86,7 +122,7 @@ class Database:
         with open(config.db_path, 'a') as db:
             a = csv.writer(db, delimiter=',', lineterminator='\n')
             for f in files:
-                h = self.build_dhash(Image.open(directory + f))
+                h = self.hashing.build_dhash(Image.open(directory + f))
                 data = [[f, h]]
                 a.writerows(data)
 
@@ -94,8 +130,7 @@ class Database:
 
     def find_in_database(self, img):
         # Scan through Database to find similar pics, than order by dirrerence
-        hashing = Hashing()
-        h = hashing.build_dhash(img)
+        h = self.hashing.build_dhash(img)
         diffs = {}
         with open(config.db_path, "rb") as db:
             reader = csv.reader(db, delimiter="\n")
