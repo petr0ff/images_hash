@@ -1,14 +1,20 @@
 from PIL import Image
 import csv, os, time, hashlib
 import config
+import numpy
+from scipy import fftpack
+import itertools
 
 
-def convert_and_resize_image(image):
+def convert_and_resize_image(image, x, y):
     # 'L' is for grayscale
     return image.convert('L').resize(
-        (config.hash_size + 1, config.hash_size),  # (width, height)
-        Image.BILINEAR,  # bilinear interpolation
+        (x, y),  # (width, height)
+        Image.BILINEAR
     )
+
+def convert(image):
+    return image.convert('L')
 
 
 def collect_pixel_diff(image):
@@ -16,9 +22,24 @@ def collect_pixel_diff(image):
     difference = []
     for row in xrange(config.hash_size):
         for col in xrange(config.hash_size):
-            pixel_left = image.getpixel((col, row))
-            pixel_right = image.getpixel((col + 1, row))
-            difference.append(pixel_left > pixel_right)
+            difference.append(image.getpixel((col, row)) > image.getpixel((col + 1, row)))
+    return difference
+
+
+def collect_pixel_avg(image):
+    # difference is a binary matrix
+    difference = []
+    sum = 0
+    pixels = 0
+    for row in xrange(config.hash_size):
+        for col in xrange(config.hash_size):
+            pixel = image.getpixel((col, row))
+            sum += pixel
+            pixels += 1
+    average = sum / pixels
+    for row in xrange(config.hash_size):
+        for col in xrange(config.hash_size):
+            difference.append(image.getpixel((col, row)) > average)
     return difference
 
 
@@ -47,7 +68,7 @@ def hamming_distance(hash1, hash2):
 def similarity(distance):
     if distance == 0:
         return "Images are the same"
-    if 0 < distance < 5:
+    if 0 < distance <= 5:
         return "Most likely images are the same"
     if 5 < distance < 12:
         return "Images are similar but not the same"
@@ -61,13 +82,41 @@ class Hashing:
         # 1. Convert image to grayscale
         # 2. Resize image to 9+8 size (width and height)
         start = time.time()
-        image = convert_and_resize_image(image)
+        image = convert_and_resize_image(image, config.hash_size + 1, config.hash_size)
         # 3. Comparing pixel by pixel (with neighbor pixel)
         difference = collect_pixel_diff(image)
         # 4. Convert to hexadecimal array
+        h = convert_to_hex(difference)
+        print h
         finish = time.time()
         self.current_duration = "%0.3f" % (finish - start)
-        return convert_to_hex(difference)
+        return h
+
+    def build_ahash(self, image):
+        # 1. Convert image to grayscale
+        start = time.time()
+        image = convert_and_resize_image(image, config.hash_size, config.hash_size)
+        # 3. Comparing pixel with average
+        difference = collect_pixel_avg(image)
+        # 4. Convert to hexadecimal array
+        h = convert_to_hex(difference)
+        finish = time.time()
+        self.current_duration = "%0.3f" % (finish - start)
+        return h
+
+    def build_phash(self, image):
+        start = time.time()
+        image = convert_and_resize_image(image, 32, 32)
+        pixels = numpy.array(image.getdata(), dtype=numpy.float).reshape((32, 32))
+        dct = fftpack.dct(pixels)
+        dctlowfreq = dct[:8, 1:9]
+        avg = dctlowfreq.mean()
+        diff = dctlowfreq > avg
+        difference = list(itertools.chain.from_iterable(diff))
+        h = convert_to_hex(difference)
+        finish = time.time()
+        self.current_duration = "%0.3f" % (finish - start)
+        return h
 
     def build_mda5_hash(self, path):
         start = time.time()
@@ -122,7 +171,7 @@ class Database:
         with open(config.db_path, 'a') as db:
             a = csv.writer(db, delimiter=',', lineterminator='\n')
             for f in files:
-                h = self.hashing.build_dhash(Image.open(directory + f))
+                h = self.hashing.build_phash(Image.open(directory + f))
                 data = [[f, h]]
                 a.writerows(data)
 
@@ -130,7 +179,7 @@ class Database:
 
     def find_in_database(self, img):
         # Scan through Database to find similar pics, than order by dirrerence
-        h = self.hashing.build_dhash(img)
+        h = self.hashing.build_phash(img)
         diffs = {}
         with open(config.db_path, "rb") as db:
             reader = csv.reader(db, delimiter="\n")
