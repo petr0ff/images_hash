@@ -70,7 +70,7 @@ def similarity(distance):
         return "Images are the same"
     if 0 < distance <= 5:
         return "Most likely images are the same"
-    if 5 < distance < 12:
+    if 5 < distance < 10:
         return "Images are similar but not the same"
     return "Images are different"
 
@@ -87,7 +87,6 @@ class Hashing:
         difference = collect_pixel_diff(image)
         # 4. Convert to hexadecimal array
         h = convert_to_hex(difference)
-        print h
         finish = time.time()
         self.current_duration = "%0.3f" % (finish - start)
         return h
@@ -152,65 +151,3 @@ class Hashing:
         finish = time.time()
         self.current_duration = "%0.3f" % (finish - start)
         return True
-
-
-class Database:
-    images_count = 0
-    hashing = Hashing()
-
-    def calculate_hash_strings_in_dir(self, directory):
-        # Get the dict of hash strings: linear
-        # Get the file names
-        files = os.listdir(directory)
-        # Write headers
-        with open(config.db_path, 'w') as db:
-            a = csv.writer(db, delimiter=',', lineterminator='\n')
-            a.writerow(["Image path", "Hash"])
-
-        # Write rows
-        with open(config.db_path, 'a') as db:
-            a = csv.writer(db, delimiter=',', lineterminator='\n')
-            for f in files:
-                h = self.hashing.build_phash(Image.open(directory + f))
-                data = [[f, h]]
-                a.writerows(data)
-
-        print "Completed! Database is initiated."
-
-    def find_in_database(self, img):
-        # Scan through Database to find similar pics, than order by dirrerence
-        h = self.hashing.build_phash(img)
-        diffs = {}
-        with open(config.db_path, "rb") as db:
-            reader = csv.reader(db, delimiter="\n")
-            rownum = 0
-            for row in reader:
-                # Exclude header row
-                if rownum > 0:
-                    f_and_h = row[0].split(',')
-                    h2 = f_and_h[1]
-                    diffs[f_and_h[0]] = hamming_distance(h, h2)
-                rownum += 1
-            self.images_count = rownum - 1
-
-        # Print results by the similarity value
-        diffs = sorted([(value, key) for (key, value) in diffs.items()])
-        for val in diffs:
-            print similarity(val[0]) + ": " + val[1] + ", distance is: " + str(val[0])
-
-    def find_in_directory(self, img, directory=config.images_dir):
-        # Scan through directory to find similar pics, than order by dirrerence
-        hashing = Hashing()
-        h = hashing.build_dhash(img)
-        diffs = {}
-        files = os.listdir(directory)
-        self.images_count = len(files)
-
-        for f in files:
-            h2 = hashing.build_dhash(Image.open(directory + f))
-            diffs[f] = hamming_distance(h, h2)
-
-        # Print results by the similarity value
-        diffs = sorted([(value, key) for (key, value) in diffs.items()])
-        for val in diffs:
-            print similarity(val[0]) + ": " + val[1] + ", distance is: " + str(val[0])
