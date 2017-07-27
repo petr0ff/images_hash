@@ -1,6 +1,6 @@
-from src.db_tools import Database
-from src.hash_tools import *
-from src import config
+from utils.db_tools import Database
+from utils.hash_tools import *
+from utils import config
 from PIL import Image
 
 
@@ -12,8 +12,8 @@ def test(run_times=50):
         img1 = Image.open(config.images_dir + 'risunok_1.jpg')
         img2 = Image.open(config.images_dir + 'risunok_2.jpg')
 
-        hash1 = hashing.build_phash(img1)
-        hash2 = hashing.build_phash(img2)
+        hash1 = hashing.build_ahash(img1)
+        hash2 = hashing.build_ahash(img2)
 
         dist = hamming_distance(hash1, hash2)
 

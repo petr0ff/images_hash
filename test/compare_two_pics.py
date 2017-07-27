@@ -1,16 +1,19 @@
-from src.db_tools import Database
-from src.hash_tools import *
-from src import config
+from utils.db_tools import Database
+from utils.hash_tools import *
+from utils import config
 from PIL import Image
 
 
-def test(run_times=1):
+def test(run_times=50):
     avg_duration = 0.0
     for i in range(run_times):
         hashing = Hashing()
 
-        hash1 = hashing.build_mda5_hash(config.images_dir + 'derevo1.jpg')
-        hash2 = hashing.build_mda5_hash(config.images_dir + 'derevo4.jpg')
+        img1 = Image.open(config.images_dir + 'risunok_1.jpg')
+        img2 = Image.open(config.images_dir + 'risunok_2.jpg')
+
+        hash1 = hashing.build_dhash(img1)
+        hash2 = hashing.build_dhash(img2)
 
         dist = hamming_distance(hash1, hash2)
 

@@ -187,25 +187,25 @@ def store_goods():
                         item_images = item_images + item_images_plus
                     for img in item_images:
                         try:
-                            if "/mini/" in img.attrib['src']:
-                                r = requests.get(img.attrib['src'].replace('mini/',''), stream=True)
+                            if "/mini/" in img.attrib['utils']:
+                                r = requests.get(img.attrib['utils'].replace('mini/',''), stream=True)
                             else:
-                                r = requests.get(img.attrib['src'], stream=True)
+                                r = requests.get(img.attrib['utils'], stream=True)
                             if r.status_code == 200:
-                                with open('C://shop//images//%s' % img.attrib['src'].split('/')[-1], 'wb') as f:
+                                with open('C://shop//images//%s' % img.attrib['utils'].split('/')[-1], 'wb') as f:
                                     for chunk in r.iter_content():
                                         f.write(chunk)
                             if len(item_images) == 1:
-                                item_data['Основное изображение'.decode('utf-8')] = item_images[0].attrib['src'].split('/')[-1]+"#"
+                                item_data['Основное изображение'.decode('utf-8')] = item_images[0].attrib['utils'].split('/')[-1]+"#"
                             elif len(item_images) > 1:
-                                item_data['Основное изображение'.decode('utf-8')] = item_images[0].attrib['src'].split('/')[-1]+"#"
+                                item_data['Основное изображение'.decode('utf-8')] = item_images[0].attrib['utils'].split('/')[-1]+"#"
                                 imgs_names = ""
                                 i=1
                                 for i in range(i, len(item_images)):
-                                    imgs_names += item_images[i].attrib['src'].split('/')[-1]+"#"
+                                    imgs_names += item_images[i].attrib['utils'].split('/')[-1]+"#"
                                 item_data['Дополнительные изображения'.decode('utf-8')] = imgs_names
                         except:
-                            print "Couldn't download " + str(img.attrib['src'])
+                            print "Couldn't download " + str(img.attrib['utils'])
 
                 #Write all info to the csv
                 with open('C://shop//goods.csv','a') as fout:

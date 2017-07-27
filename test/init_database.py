@@ -1,6 +1,6 @@
-from src.hash_tools import *
-from src import config
-from src.db_tools import Database
+from utils.hash_tools import *
+from utils import config
+from utils.db_tools import Database
 
 
 def init_db():

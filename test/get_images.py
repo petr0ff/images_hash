@@ -1,9 +1,9 @@
-﻿from src.hash_tools import Hashing
-from src.db_tools import Database
+﻿from utils.hash_tools import Hashing
+from utils.db_tools import Database
 import requests, collections
 from bs4 import BeautifulSoup
 from lxml import html
-from src import config
+from utils import config
 from PIL import Image
 import os
 
@@ -34,7 +34,7 @@ def store_fl():
         soup = BeautifulSoup(data)
         img = soup.select("table.infobox a.image img")
         if img:
-            imgs.append(img[0].get('src'))
+            imgs.append(img[0].get('utils'))
         else:
             imgs.append("No image for " + name)
 

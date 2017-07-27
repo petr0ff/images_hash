@@ -1,5 +1,5 @@
-from src.hash_tools import *
-from src import config
+from utils.hash_tools import *
+from utils import config
 from PIL import Image
 
 

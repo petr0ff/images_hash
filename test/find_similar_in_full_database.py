@@ -1,6 +1,6 @@
-from src.db_tools import Database
-from src.hash_tools import *
-from src import config
+from utils.db_tools import Database
+from utils.hash_tools import *
+from utils import config
 from PIL import Image
 import time
 
